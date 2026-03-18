@@ -1,0 +1,14 @@
+{
+  "name": "students-api-vercel",
+  "version": "1.0.0",
+  "description": "Express API for Vercel",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
