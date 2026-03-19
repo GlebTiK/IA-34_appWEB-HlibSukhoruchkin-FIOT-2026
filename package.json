@@ -1,14 +1,13 @@
 {
-  "name": "students-api-vercel",
+  "name": "lab1-part2-puppy-haven-backend",
   "version": "1.0.0",
-  "description": "Express API for Vercel",
+  "private": true,
+  "description": "Lab 1 Part 2: Node.js + Express HTTP server + REST API (/students) + static Puppy Haven at /app",
   "main": "server.js",
-  "type": "commonjs",
   "scripts": {
-    "dev": "vercel dev",
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "express": "^4.19.2"
   }
 }
