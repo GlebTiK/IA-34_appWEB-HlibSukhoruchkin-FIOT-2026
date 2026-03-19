@@ -11,7 +11,7 @@ function buildPool() {
       queueLimit: 0,
       ssl: useSsl
         ? {
-            rejectUnauthorized: false
+            rejectUnauthorized: true
           }
         : undefined
     });
@@ -28,7 +28,7 @@ function buildPool() {
     queueLimit: 0,
     ssl: useSsl
       ? {
-          rejectUnauthorized: false
+          rejectUnauthorized: true
         }
       : undefined
   });
