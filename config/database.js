@@ -7,6 +7,7 @@ function buildSequelize() {
     return new Sequelize(process.env.MYSQL_URL, {
       dialect: 'mysql',
       logging: false,
+      dialectModule: require('mysql2'),
       dialectOptions: useSsl
         ? {
             ssl: {
