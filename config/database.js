@@ -1,49 +1,40 @@
+'use strict';
+
 const { Sequelize } = require('sequelize');
+require('dotenv').config();
 
-function buildSequelize() {
-  const useSsl = String(process.env.DB_SSL || 'false').toLowerCase() === 'true';
-
-  if (process.env.MYSQL_URL) {
-    return new Sequelize(process.env.MYSQL_URL, {
-      dialect: 'mysql',
-      logging: false,
-      dialectModule: require('mysql2'),
-      dialectOptions: useSsl
-        ? {
-            ssl: {
-              require: true,
-              rejectUnauthorized: true
-            }
-          }
-        : {}
-    });
-  }
-
-  return new Sequelize(
-    process.env.DB_NAME || 'web_backend_lab',
-    process.env.DB_USER || 'root',
-    process.env.DB_PASSWORD || 'password',
-    {
-      host: process.env.DB_HOST || 'localhost',
-      port: Number(process.env.DB_PORT || 3306),
-      dialect: 'mysql',
-      logging: false,
-      dialectOptions: useSsl
-        ? {
-            ssl: {
-              require: true,
-              rejectUnauthorized: false
-            }
-          }
-        : {}
-    }
-  );
+function parseBool(v, defVal) {
+  if (v === undefined || v === null || v === '') return defVal;
+  const s = String(v).toLowerCase().trim();
+  return s === '1' || s === 'true' || s === 'yes' || s === 'y';
 }
 
-const sequelize = global.__lab2_sequelize || buildSequelize();
+const useSsl = parseBool(process.env.DB_SSL, false);
 
-if (!global.__lab2_sequelize) {
-  global.__lab2_sequelize = sequelize;
+const baseOptions = {
+  dialect: 'mysql',
+  dialectModule: require('mysql2'),
+  logging: false,
+  dialectOptions: Object.assign(
+    { dateStrings: true },
+    useSsl ? { ssl: { rejectUnauthorized: false } } : {}
+  )
+};
+
+let sequelize;
+
+if (process.env.MYSQL_URL && String(process.env.MYSQL_URL).trim()) {
+  sequelize = new Sequelize(String(process.env.MYSQL_URL).trim(), baseOptions);
+} else {
+  sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASSWORDWORD,
+    Object.assign({}, baseOptions, {
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT || 3306)
+    })
+  );
 }
 
 module.exports = sequelize;

@@ -1,16 +1,19 @@
 {
-  "name": "lab2-mysql-sequelize-vercel",
+  "name": "lab2-puppy-haven-mysql",
   "version": "1.0.0",
-  "description": "Laboratory work #2: MySQL + Node.js + Sequelize + Vercel",
+  "private": true,
+  "description": "Lab 2: Puppy Haven expansion with MySQL + mysql2 + Sequelize",
   "main": "server.js",
-  "type": "commonjs",
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "db:sync": "node scripts/db_sync.js",
+    "db:seed": "node scripts/db_seed.js",
+    "sql:demo": "node scripts/sql_demo.js"
   },
   "dependencies": {
-    "express": "^4.21.2",
-    "mysql2": "^3.15.1",
-    "sequelize": "^6.37.7"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mysql2": "^3.11.0",
+    "sequelize": "^6.37.3"
   }
 }

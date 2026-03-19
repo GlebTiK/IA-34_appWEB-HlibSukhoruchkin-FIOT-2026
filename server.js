@@ -1,249 +1,126 @@
+'use strict';
+
+const path = require('path');
 const express = require('express');
-const initApp = require('./lib/bootstrap');
-const pool = require('./db/raw');
-const { User, Post } = require('./models');
+require('dotenv').config();
+
+const { sequelize, Puppy, VisitRequest } = require('./models');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
+const SHOULD_SYNC = String(process.env.SEQUELIZE_SYNC || 'false').toLowerCase() === 'true';
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: false }));
 
-app.use(async (req, res, next) => {
+app.get('/', (_req, res) => {
+  res.send('Hello from Node.js server');
+});
+
+app.use('/app', express.static(path.join(__dirname, 'public')));
+
+let students = [
+  { id: 1, name: 'Hlib Sukhoruchkin', group: 'IA-34' },
+  { id: 2, name: 'Andrey Angel', group: 'IA-34' }
+];
+
+app.get('/students', (_req, res) => res.json(students));
+
+app.post('/students', (req, res) => {
+  const { id, name, group } = req.body || {};
+  const parsedId = Number(id);
+  if (!Number.isInteger(parsedId) || parsedId <= 0) return res.status(400).json({ error: 'Field "id" must be a positive integer' });
+  if (!name || String(name).trim().length < 2) return res.status(400).json({ error: 'Field "name" is required' });
+  if (!group || String(group).trim().length < 2) return res.status(400).json({ error: 'Field "group" is required' });
+  if (students.some(s => s.id === parsedId)) return res.status(409).json({ error: 'Student with this id already exists' });
+  const student = { id: parsedId, name: String(name).trim(), group: String(group).trim() };
+  students.push(student);
+  res.status(201).json(student);
+});
+
+app.put('/students/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'Invalid id in URL' });
+  const idx = students.findIndex(s => s.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Student not found' });
+  const { name, group } = req.body || {};
+  if (name !== undefined) {
+    if (!String(name).trim()) return res.status(400).json({ error: 'Invalid "name"' });
+    students[idx].name = String(name).trim();
+  }
+  if (group !== undefined) {
+    if (!String(group).trim()) return res.status(400).json({ error: 'Invalid "group"' });
+    students[idx].group = String(group).trim();
+  }
+  res.json(students[idx]);
+});
+
+app.delete('/students/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'Invalid id in URL' });
+  const idx = students.findIndex(s => s.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Student not found' });
+  const removed = students.splice(idx, 1)[0];
+  res.json({ deleted: true, student: removed });
+});
+
+app.get('/api/health', async (_req, res) => {
   try {
-    await initApp();
-    next();
-  } catch (error) {
-    console.error('Database initialization error:', error);
-    res.status(500).json({
-      message: 'Database initialization failed',
-      error: error.message
-    });
+    await sequelize.authenticate();
+    res.json({ ok: true, db: 'connected' });
+  } catch (e) {
+    res.status(500).json({ ok: false, db: 'disconnected', error: String(e?.message || e) });
   }
 });
 
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Lab 2 API is running on Vercel',
-    endpoints: {
-      health: 'GET /health',
-      rawUsersList: 'GET /sql/users',
-      rawUserCreate: 'POST /sql/users',
-      rawUserUpdate: 'PUT /sql/users/:id',
-      rawUserDelete: 'DELETE /sql/users/:id',
-      ormUsersList: 'GET /orm/users',
-      ormUserCreate: 'POST /orm/users',
-      ormPostsList: 'GET /orm/posts',
-      ormPostCreate: 'POST /orm/posts',
-      ormUserPosts: 'GET /orm/users/:id/posts'
-    }
-  });
-});
-
-app.get('/health', async (req, res) => {
-  const [rows] = await pool.execute('SELECT NOW() AS serverTime');
-  res.json({
-    status: 'ok',
-    databaseTime: rows[0].serverTime
-  });
-});
-
-// --------------------
-// mysql2 / raw SQL
-// --------------------
-app.get('/sql/users', async (req, res) => {
-  const [rows] = await pool.execute(
-    'SELECT id, name, email, createdAt, updatedAt FROM users ORDER BY id ASC'
-  );
-  res.json(rows);
-});
-
-app.post('/sql/users', async (req, res) => {
-  const { name, email } = req.body;
-
-  if (!name || !email) {
-    return res.status(400).json({
-      message: 'Fields name and email are required'
-    });
+app.get('/api/puppies', async (_req, res) => {
+  try {
+    const items = await Puppy.findAll({ order: [['id', 'ASC']] });
+    res.json(items);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to load puppies', details: String(e?.message || e) });
   }
-
-  const [result] = await pool.execute(
-    'INSERT INTO users (name, email, createdAt, updatedAt) VALUES (?, ?, NOW(), NOW())',
-    [name, email]
-  );
-
-  const [rows] = await pool.execute(
-    'SELECT id, name, email, createdAt, updatedAt FROM users WHERE id = ?',
-    [result.insertId]
-  );
-
-  res.status(201).json(rows[0]);
 });
 
-app.put('/sql/users/:id', async (req, res) => {
-  const id = Number(req.params.id);
-  const { name, email } = req.body;
-
-  const [existingRows] = await pool.execute(
-    'SELECT id FROM users WHERE id = ?',
-    [id]
-  );
-
-  if (existingRows.length === 0) {
-    return res.status(404).json({
-      message: 'User not found'
-    });
+app.get('/api/visit_requests', async (_req, res) => {
+  try {
+    const items = await VisitRequest.findAll({ order: [['id', 'DESC']], include: [{ model: Puppy, as: 'puppy' }] });
+    res.json(items);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to load visit requests', details: String(e?.message || e) });
   }
-
-  await pool.execute(
-    `UPDATE users
-     SET name = COALESCE(?, name),
-         email = COALESCE(?, email),
-         updatedAt = NOW()
-     WHERE id = ?`,
-    [name ?? null, email ?? null, id]
-  );
-
-  const [rows] = await pool.execute(
-    'SELECT id, name, email, createdAt, updatedAt FROM users WHERE id = ?',
-    [id]
-  );
-
-  res.json(rows[0]);
 });
 
-app.delete('/sql/users/:id', async (req, res) => {
-  const id = Number(req.params.id);
-
-  const [existingRows] = await pool.execute(
-    'SELECT id, name, email FROM users WHERE id = ?',
-    [id]
-  );
-
-  if (existingRows.length === 0) {
-    return res.status(404).json({
-      message: 'User not found'
+app.post('/api/visit_requests', async (req, res) => {
+  try {
+    const { puppy_id, visitor_name, phone, visit_datetime, note } = req.body || {};
+    const pid = Number(puppy_id);
+    if (!Number.isFinite(pid) || pid <= 0) return res.status(400).json({ error: 'puppy_id is required and must be a positive number' });
+    if (!visitor_name || String(visitor_name).trim().length < 2) return res.status(400).json({ error: 'visitor_name is required' });
+    if (!phone || String(phone).trim().length < 5) return res.status(400).json({ error: 'phone is required' });
+    if (!visit_datetime || String(visit_datetime).trim().length < 10) return res.status(400).json({ error: 'visit_datetime is required' });
+    const puppy = await Puppy.findByPk(pid);
+    if (!puppy) return res.status(404).json({ error: 'Puppy not found' });
+    const created = await VisitRequest.create({
+      puppy_id: pid,
+      visitor_name: String(visitor_name).trim(),
+      phone: String(phone).trim(),
+      visit_datetime: new Date(visit_datetime),
+      note: note ? String(note) : null
     });
+    res.status(201).json(created);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to create visit request', details: String(e?.message || e) });
   }
-
-  await pool.execute('DELETE FROM users WHERE id = ?', [id]);
-
-  res.json({
-    message: 'User deleted successfully',
-    user: existingRows[0]
-  });
 });
 
-// --------------------
-// Sequelize / ORM
-// --------------------
-app.get('/orm/users', async (req, res) => {
-  const users = await User.findAll({
-    include: [
-      {
-        model: Post,
-        as: 'posts'
-      }
-    ],
-    order: [['id', 'ASC']]
-  });
-
-  res.json(users);
-});
-
-app.post('/orm/users', async (req, res) => {
-  const { name, email } = req.body;
-
-  if (!name || !email) {
-    return res.status(400).json({
-      message: 'Fields name and email are required'
-    });
+(async () => {
+  try {
+    await sequelize.authenticate();
+    if (SHOULD_SYNC) await sequelize.sync();
+    app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
   }
-
-  const user = await User.create({ name, email });
-  res.status(201).json(user);
-});
-
-app.get('/orm/posts', async (req, res) => {
-  const posts = await Post.findAll({
-    include: [
-      {
-        model: User,
-        as: 'user'
-      }
-    ],
-    order: [['id', 'ASC']]
-  });
-
-  res.json(posts);
-});
-
-app.post('/orm/posts', async (req, res) => {
-  const { title, content, userId } = req.body;
-
-  if (!title || !content || !userId) {
-    return res.status(400).json({
-      message: 'Fields title, content and userId are required'
-    });
-  }
-
-  const user = await User.findByPk(userId);
-
-  if (!user) {
-    return res.status(404).json({
-      message: 'User not found'
-    });
-  }
-
-  const post = await Post.create({
-    title,
-    content,
-    userId
-  });
-
-  res.status(201).json(post);
-});
-
-app.get('/orm/users/:id/posts', async (req, res) => {
-  const id = Number(req.params.id);
-
-  const user = await User.findByPk(id, {
-    include: [
-      {
-        model: Post,
-        as: 'posts'
-      }
-    ]
-  });
-
-  if (!user) {
-    return res.status(404).json({
-      message: 'User not found'
-    });
-  }
-
-  res.json(user);
-});
-
-// Common error handler
-app.use((error, req, res, next) => {
-  console.error(error);
-
-  if (error.name === 'SequelizeUniqueConstraintError') {
-    return res.status(409).json({
-      message: 'A user with this email already exists'
-    });
-  }
-
-  res.status(500).json({
-    message: 'Internal server error',
-    error: error.message
-  });
-});
-
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
-  });
-}
-
-module.exports = app;
+})();
