@@ -13,12 +13,12 @@ function parseBool(v, defVal) {
   const useSsl = parseBool(process.env.DB_SSL, false);
 
   const conn = process.env.MYSQL_URL && String(process.env.MYSQL_URL).trim()
-    ? await mysql.createConnection(String(process.env.MYSQL_URL).trim())
+    ? await mysql.createConnection({ uri: String(process.env.MYSQL_URL).trim(), ssl: useSsl ? { rejectUnauthorized: false } : undefined })
     : await mysql.createConnection({
         host: process.env.DB_HOST,
         port: Number(process.env.DB_PORT || 3306),
         user: process.env.DB_USER,
-        password: process.env.DB_PASSWORDWORD,
+        password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
         ssl: useSsl ? { rejectUnauthorized: false } : undefined
       });

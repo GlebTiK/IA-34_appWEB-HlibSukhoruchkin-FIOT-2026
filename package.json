@@ -2,7 +2,7 @@
   "name": "lab2-puppy-haven-mysql",
   "version": "1.0.0",
   "private": true,
-  "description": "Lab 2: Puppy Haven expansion with MySQL + mysql2 + Sequelize",
+  "description": "Lab 2: Puppy Haven (Lab1 Part1 expansion) + MySQL + mysql2 + Sequelize",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
