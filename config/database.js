@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
@@ -11,14 +12,24 @@ function parseBool(v, defVal) {
 
 const useSsl = parseBool(process.env.DB_SSL, false);
 
+const sslOptions = useSsl
+  ? {
+      ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true,
+        ca: process.env.DB_CA_PATH ? fs.readFileSync(process.env.DB_CA_PATH) : undefined
+      }
+    }
+  : {};
+
 const baseOptions = {
   dialect: 'mysql',
   dialectModule: require('mysql2'),
   logging: false,
-  dialectOptions: Object.assign(
-    { dateStrings: true },
-    useSsl ? { ssl: { rejectUnauthorized: false } } : {}
-  )
+  dialectOptions: {
+    dateStrings: true,
+    ...sslOptions
+  }
 };
 
 let sequelize;
@@ -30,10 +41,11 @@ if (process.env.MYSQL_URL && String(process.env.MYSQL_URL).trim()) {
     process.env.DB_NAME,
     process.env.DB_USER,
     process.env.DB_PASSWORD,
-    Object.assign({}, baseOptions, {
+    {
+      ...baseOptions,
       host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT || 3306)
-    })
+      port: Number(process.env.DB_PORT || 4000)
+    }
   );
 }
 
