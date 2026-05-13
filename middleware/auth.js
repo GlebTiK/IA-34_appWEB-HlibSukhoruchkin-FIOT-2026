@@ -12,8 +12,8 @@ module.exports = async function auth(req, res, next) {
 
     const token = String(header).slice(7).trim();
     const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-
     const user = await User.findByPk(payload.user_id);
+
     if (!user || !user.is_active) {
       return res.status(401).json({ error: 'User is not available' });
     }

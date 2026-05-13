@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     phone: { type: DataTypes.STRING(64), allowNull: false },
     visit_datetime: { type: DataTypes.DATE, allowNull: false },
     note: { type: DataTypes.TEXT, allowNull: true },
-    status: { type: DataTypes.ENUM('pending','approved','rejected'), allowNull: false, defaultValue: 'pending' }
+    status: { type: DataTypes.ENUM('pending', 'approved', 'rejected'), allowNull: false, defaultValue: 'pending' }
   }, {
     tableName: 'visit_requests',
     timestamps: true,

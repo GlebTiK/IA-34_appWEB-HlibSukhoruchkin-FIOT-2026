@@ -1,14 +1,16 @@
 {
-  "name": "lab3-puppy-haven-auth",
+  "name": "lab4-puppy-haven-logging-upload-monitoring",
   "version": "1.0.0",
   "private": true,
-  "description": "Lab 3: Puppy Haven continuation of Lab 2 with REST API authentication, validation and protected routes",
+  "description": "Lab 4: Puppy Haven Node.js logging, file uploads and monitoring",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "dev": "node server.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:logs": "pm2 logs puppy-haven-lab4",
     "db:sync": "node scripts/db_sync.js",
-    "db:seed": "node scripts/db_seed.js",
-    "sql:demo": "node scripts/sql_demo.js"
+    "db:seed": "node scripts/db_seed.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -17,7 +19,13 @@
     "express-rate-limit": "^7.4.0",
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
     "mysql2": "^3.11.0",
-    "sequelize": "^6.37.3"
+    "sequelize": "^6.37.3",
+    "winston": "^3.14.2"
+  },
+  "devDependencies": {
+    "pm2": "^5.4.2"
   }
 }

@@ -1,28 +1,24 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
+let logger;
+try {
+  logger = require('../utils/logger');
+} catch (_e) {
+  logger = console;
+}
 
 module.exports = function errorHandler(err, req, res, _next) {
-  try {
-    const dir = path.join(__dirname, '..', 'logs');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+  const status = err && err.status ? err.status : 500;
+  const message = err && err.publicMessage ? err.publicMessage : 'Internal server error';
 
-    const file = path.join(dir, 'errors.log');
-    const text = [
-      '[' + new Date().toISOString() + ']',
-      req.method + ' ' + req.originalUrl,
-      err && err.stack ? err.stack : String(err),
-      '----------------------------------------'
-    ].join('\n') + '\n';
-
-    fs.appendFileSync(file, text, 'utf8');
-  } catch (_logError) {
+  if (logger && typeof logger.error === 'function') {
+    logger.error('Unhandled error', {
+      method: req.method,
+      url: req.originalUrl,
+      status,
+      stack: err && err.stack ? err.stack : String(err)
+    });
   }
 
-  return res.status(err && err.status ? err.status : 500).json({
-    error: err && err.publicMessage ? err.publicMessage : 'Internal server error'
-  });
+  return res.status(status).json({ error: message });
 };

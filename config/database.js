@@ -3,10 +3,9 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-function parseBool(v, defVal) {
-  if (v === undefined || v === null || v === '') return defVal;
-  const s = String(v).toLowerCase().trim();
-  return s === '1' || s === 'true' || s === 'yes' || s === 'y';
+function parseBool(value, defaultValue) {
+  if (value === undefined || value === null || value === '') return defaultValue;
+  return ['1', 'true', 'yes', 'y'].includes(String(value).toLowerCase().trim());
 }
 
 const useSsl = parseBool(process.env.DB_SSL, false);
