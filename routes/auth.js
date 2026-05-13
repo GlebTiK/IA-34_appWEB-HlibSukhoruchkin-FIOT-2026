@@ -29,6 +29,21 @@ function validationFailed(req, res) {
   return false;
 }
 
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserRegisterInput'
+ *     responses:
+ *       201:
+ *         description: User created
+ */
 router.post('/register', [
   body('full_name').trim().isLength({ min: 2 }).withMessage('full_name must contain at least 2 characters'),
   body('email').trim().isEmail().withMessage('email must be valid'),

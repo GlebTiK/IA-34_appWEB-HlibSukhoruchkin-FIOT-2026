@@ -1,16 +1,14 @@
-# Lab 5 — Security, performance and tests
+# Lab 6 — Swagger/OpenAPI documentation and deployment
 
 This local branch continues the Puppy Haven backend and adds:
 
-- HTTP security headers with Helmet;
-- global rate limiting and login rate limiting;
-- input validation with express-validator;
-- pagination and optimized field selection for `GET /api/puppies`;
-- response compression;
-- optional Redis cache via `REDIS_URL` with in-memory fallback;
-- Jest + Supertest API tests;
-- Artillery load test scenario;
-- Dockerfile.
+- Swagger/OpenAPI documentation with `swagger-jsdoc`;
+- Swagger UI at `/api-docs`;
+- raw OpenAPI JSON at `/openapi.json`;
+- documented REST endpoints for puppies, visit requests and auth;
+- MySQL/Sequelize CRUD basis reused from previous labs;
+- Render deployment config in `render.yaml`;
+- production-friendly `PORT` support.
 
 ## Run
 
@@ -22,11 +20,10 @@ npm run db:seed
 npm start
 ```
 
-## Test
+Open:
 
-```bash
-npm test
-npm run artillery
+```text
+http://localhost:3000/api-docs
 ```
 
-Suggested branch name: `lab5`.
+Suggested branch name: `lab6`.

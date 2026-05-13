@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: puppy-haven-lab6
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: SEQUELIZE_SYNC
+        value: false

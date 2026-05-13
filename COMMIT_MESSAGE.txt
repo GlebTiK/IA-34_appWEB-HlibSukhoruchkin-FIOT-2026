@@ -1,1 +1,1 @@
-feat: implement lab5 security caching and api tests
+feat: implement lab6 swagger documentation and deploy config
