@@ -7,7 +7,5 @@ module.exports = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: {
-    error: 'Too many login attempts. Please try again later.'
-  }
+  message: { error: 'Too many login attempts. Please try again later.' }
 });

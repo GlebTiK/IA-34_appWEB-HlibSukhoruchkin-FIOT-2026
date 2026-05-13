@@ -10,14 +10,7 @@ const RefreshToken = require('./RefreshToken')(sequelize, DataTypes);
 
 Puppy.hasMany(VisitRequest, { foreignKey: 'puppy_id', as: 'visit_requests' });
 VisitRequest.belongsTo(Puppy, { foreignKey: 'puppy_id', as: 'puppy' });
-
 User.hasMany(RefreshToken, { foreignKey: 'user_id', as: 'refresh_tokens', onDelete: 'CASCADE' });
 RefreshToken.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
-module.exports = {
-  sequelize,
-  Puppy,
-  VisitRequest,
-  User,
-  RefreshToken
-};
+module.exports = { sequelize, Puppy, VisitRequest, User, RefreshToken };
