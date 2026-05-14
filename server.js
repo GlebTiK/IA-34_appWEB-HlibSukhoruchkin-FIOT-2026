@@ -18,6 +18,7 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const SHOULD_SYNC = String(process.env.SEQUELIZE_SYNC || 'false').toLowerCase() === 'true';
+let initPromise = null;
 
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
@@ -49,10 +50,20 @@ async function ensureAdmin() {
   });
 }
 
+async function initApp() {
+  if (!initPromise) {
+    initPromise = (async () => {
+      await sequelize.authenticate();
+      if (SHOULD_SYNC) await sequelize.sync();
+      await ensureAdmin();
+      logger.info('Application initialized');
+    })();
+  }
+  return initPromise;
+}
+
 async function start() {
-  await sequelize.authenticate();
-  if (SHOULD_SYNC) await sequelize.sync();
-  await ensureAdmin();
+  await initApp();
   return app.listen(PORT, () => logger.info(`Server running on ${PORT}`));
 }
 
@@ -63,4 +74,7 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, start };
+module.exports = app;
+module.exports.app = app;
+module.exports.start = start;
+module.exports.initApp = initApp;

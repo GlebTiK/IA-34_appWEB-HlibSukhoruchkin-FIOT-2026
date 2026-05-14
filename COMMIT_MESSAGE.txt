@@ -1,1 +1,0 @@
-feat: implement lab6 swagger documentation and deploy config
