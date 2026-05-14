@@ -30,3 +30,8 @@ npm run artillery
 ```
 
 Suggested branch name: `lab5`.
+
+
+## Vercel deploy
+
+This archive includes `api/index.js` and `vercel.json`. Push the branch to GitHub, import it in Vercel, and set the same MySQL/JWT/admin environment variables as in `.env.example`. On Vercel, logs are written to the function console instead of `logs/app.log`. Lab 4 uploads use temporary `/tmp` storage on Vercel.

@@ -18,6 +18,7 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const SHOULD_SYNC = String(process.env.SEQUELIZE_SYNC || 'false').toLowerCase() === 'true';
+let initPromise = null;
 
 app.use(helmet());
 app.use(cors({ origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : true }));
@@ -36,7 +37,13 @@ app.use(rateLimit({
 app.use('/api', apiRoutes);
 app.use('/api/auth', authRoutes);
 app.get('/api/status', (_req, res) => {
-  res.json({ uptime: process.uptime(), memoryUsage: process.memoryUsage(), cpuUsage: process.cpuUsage(), nodeVersion: process.version });
+  res.json({
+    uptime: process.uptime(),
+    memoryUsage: process.memoryUsage(),
+    cpuUsage: process.cpuUsage(),
+    nodeVersion: process.version,
+    platform: process.env.VERCEL ? 'vercel' : 'node'
+  });
 });
 app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
@@ -58,10 +65,20 @@ async function ensureAdmin() {
   });
 }
 
+async function initApp() {
+  if (!initPromise) {
+    initPromise = (async () => {
+      await sequelize.authenticate();
+      if (SHOULD_SYNC) await sequelize.sync();
+      await ensureAdmin();
+      logger.info('Application initialized');
+    })();
+  }
+  return initPromise;
+}
+
 async function start() {
-  await sequelize.authenticate();
-  if (SHOULD_SYNC) await sequelize.sync();
-  await ensureAdmin();
+  await initApp();
   return app.listen(PORT, () => logger.info(`Server started on port ${PORT}`));
 }
 
@@ -72,4 +89,7 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, start };
+module.exports = app;
+module.exports.app = app;
+module.exports.start = start;
+module.exports.initApp = initApp;

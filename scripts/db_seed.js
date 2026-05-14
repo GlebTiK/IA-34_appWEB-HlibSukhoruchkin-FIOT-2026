@@ -1,19 +1,20 @@
-'use strict';
+use strict';
 
+require('dotenv').config();
 const { sequelize, Puppy } = require('../models');
 
-const puppies = [
-  { name: 'Buddy', description: 'Friendly puppy', age_months: 4, price_uah: 12000, photo_url: '/img/puppy-1.jpg' },
-  { name: 'Luna', description: 'Calm and playful puppy', age_months: 5, price_uah: 15000, photo_url: '/img/puppy-2.jpg' },
-  { name: 'Rocky', description: 'Active puppy', age_months: 3, price_uah: 11000, photo_url: '/img/puppy-3.jpg' }
+const seedData = [
+  { name: 'Луна', description: 'Дружня, грайлива та дуже любить людей. Ідеальна для сімʼї.', age_months: 4, price_uah: 8500.00, photo_url: 'assets/images/puppy-hero.png' },
+  { name: 'Макс', description: 'Енергійний щеня, любить прогулянки та ігри з мʼячем.', age_months: 5, price_uah: 9200.00, photo_url: 'assets/images/puppy2.png' }
 ];
 
 (async () => {
   try {
     await sequelize.authenticate();
     await sequelize.sync();
-    for (const item of puppies) {
-      await Puppy.findOrCreate({ where: { name: item.name }, defaults: item });
+    const count = await Puppy.count();
+    if (count === 0) {
+      await Puppy.bulkCreate(seedData);
     }
     console.log('Seed data inserted');
     process.exit(0);
