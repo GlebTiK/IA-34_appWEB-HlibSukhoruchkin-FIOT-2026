@@ -32,3 +32,14 @@ Vercel's project directory is not used for persistent writes at runtime. This ve
 - keeps local file logs and local `uploads/` behavior when run with `npm start` on your computer.
 
 Temporary `/tmp` files are not permanent. For a real production upload feature, use external storage such as S3, Cloudinary, UploadThing, or Vercel Blob.
+
+
+## Static frontend routing
+
+The static Puppy Haven frontend is kept in `public/`, the same way as the Lab 3 branch.
+
+On Vercel:
+
+- `/` serves `public/index.html`
+- `/about.html`, `/css/style.css`, `/js/main.js`, `/assets/...` are served as static files
+- `/api/*` is routed to the Node.js serverless function in `api/index.js`
